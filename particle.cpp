@@ -1,6 +1,8 @@
 #include "physicsconstants.h"
 #include "particle.h"
 
+#include <QDebug>
+
 void Particle::update_forces(float time_step) {
     speed += gravity * time_step;
     pos += (speed * time_step).toPointF();

@@ -14,7 +14,7 @@ class ParticleSystem : public QOpenGLWidget
 {
     Q_OBJECT
 public:
-    explicit ParticleSystem(int _nb_particles, float particle_radius, const QSize& _im_size, int _particle_draw_radius, QSizeF _world_size, float _time_step, QWidget *parent = nullptr);
+    explicit ParticleSystem(int _nb_particles, float _particle_radius, const QSize& _im_size, QSizeF _world_size, float _time_step, QWidget *parent = nullptr);
     void paintEvent(QPaintEvent *e) override;
 
 public slots:
@@ -29,8 +29,8 @@ private:
 private:
     shared_ptr<Grid> grid;
     int nb_particles;
+    float particle_radius;
     QSize im_size;
-    int particle_draw_radius;
     QSizeF world_size;
     float time_step;
     QVector<shared_ptr<Particle>> particles;
