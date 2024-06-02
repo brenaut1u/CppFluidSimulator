@@ -26,7 +26,8 @@ HEADERS += \
     grid.h \
     mainwindow.h \
     particle.h \
-    particlesystem.h
+    particlesystem.h \
+    physicsconstants.h
 
 FORMS += \
     mainwindow.ui

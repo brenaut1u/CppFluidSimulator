@@ -10,6 +10,8 @@
 
 using std::shared_ptr;
 
+class Particle;
+
 class Grid
 {
 /**
@@ -17,20 +19,23 @@ class Grid
 **/
 public:
     Grid(QPoint _nb_cells, const QSizeF& _world_size);
-    void add_particle(QPointF pos);
-    void update_pos_on_grid(shared_ptr<Particle> particle);
+    void add_particle(shared_ptr<Particle> particle);
+    void update_particles(float time_step);
 
 private:
-    // These functions return the id of the cell directly (respectively) bellow, above, to the left and to the right
-    // of the cell whose id is passed as parameter. If such a cell doesn't exist, returns -1.
-    int down(int cell_id);
-    int up(int cell_id);
-    int left(int cell_id);
-    int right(int cell_id);
+    void update_pos_on_grid(shared_ptr<Particle> particle, int old_cell_id, int i);
+    int cell_id_from_world_pos(QPointF pos);
+
+    int cell_id_from_pos(QPoint pos) {
+        // Returns the id of the cell at the given position in the grid (eg: third cell from left, first from bottom)
+        return pos.y() * nb_cells.x() + pos.x();
+    }
+
+public:
+    const QSizeF& world_size;
 
 private:
     QPoint nb_cells;
-    const QSizeF& world_size;
     QVector<QVector<shared_ptr<Particle>>> particles; //an array containing the cells of the grid, containing pointers to the particles
 };
 

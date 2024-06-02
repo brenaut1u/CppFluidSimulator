@@ -5,32 +5,36 @@
 #include <QPoint>
 #include <QSize>
 #include <QSizeF>
-#include <QVector2D>
+#include <memory>
 #include "grid.h"
 
-inline constexpr float g = 9.81;
-inline constexpr QVector2D gravity = QVector2D(0.0, -g);
+using std::shared_ptr;
 
 class ParticleSystem : public QOpenGLWidget
 {
     Q_OBJECT
 public:
-    explicit ParticleSystem(int _nb_particles, double particle_size, QSize _im_size, QSizeF _world_size, double _time_step, QWidget *parent = nullptr);
-    void update_physics();
+    explicit ParticleSystem(int _nb_particles, float particle_radius, const QSize& _im_size, int _particle_draw_radius, QSizeF _world_size, float _time_step, QWidget *parent = nullptr);
     void paintEvent(QPaintEvent *e) override;
 
-signals:
+public slots:
+    void update_physics();
 
 private:
-    QPoint world_to_screen(QPointF world_pos);
+    QPoint world_to_screen(QPointF world_pos) {
+        return QPoint(world_pos.x() * im_size.width() / world_size.width(),
+                      im_size.height() -world_pos.y() * im_size.height() / world_size.height());
+    }
 
 private:
-    Grid grid;
+    shared_ptr<Grid> grid;
     int nb_particles;
     QSize im_size;
+    int particle_draw_radius;
     QSizeF world_size;
-    QImage image;
-    double time_step;
+    float time_step;
+    QVector<shared_ptr<Particle>> particles;
+    int counter;
 };
 
 #endif // PARTICLESYSTEM_H
