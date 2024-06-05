@@ -1,4 +1,4 @@
-#include "physicsconstants.h"
+#include "physics.h"
 #include "particle.h"
 
 #include <QDebug>

@@ -7,17 +7,18 @@
 using std::make_shared;
 using std::shared_ptr;
 
-ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, const QSize& _im_size, QSizeF _world_size, float _time_step, QWidget *parent) :
-    QOpenGLWidget(parent), nb_particles(_nb_particles), particle_radius(_particle_radius), im_size(_im_size), world_size(_world_size), time_step(_time_step)
+ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float _particle_influence_radius, const QSize& _im_size, QSizeF _world_size, float _time_step, QWidget *parent) :
+    QOpenGLWidget(parent), nb_particles(_nb_particles), particle_radius(_particle_radius), particle_influence_radius(_particle_influence_radius), im_size(_im_size), world_size(_world_size), time_step(_time_step)
 {
-    this->resize(im_size); // there is an issue here: after the resize, the size seems to be inconsistent,
-                           //which causes the particle to seem to be moving a little bit outside the screen
+    this->setMinimumSize(im_size.width(), im_size.height());
 
     grid = make_shared<Grid>(QPoint(3, 3), world_size);
 
-    shared_ptr<Particle> particle = make_shared<Particle>(particle_radius, QPointF(world_size.width(), world_size.height()) / 2.0, QVector2D(0.0, 0.0), grid);
-    grid->add_particle(particle);
-    particles.append(particle);
+    for (int i = 0; i < 100; i++) {
+        shared_ptr<Particle> particle = make_shared<Particle>(particle_radius, particle_influence_radius, QPointF(i * world_size.width() / 100, world_size.height() / 2.0), QVector2D(0.0, 0.0), grid);
+        grid->add_particle(particle);
+        particles.append(particle);
+    }
 }
 
 void ParticleSystem::update_physics() {
@@ -25,7 +26,7 @@ void ParticleSystem::update_physics() {
     update();
 }
 
-void ParticleSystem::paintEvent(QPaintEvent *e) {
+void ParticleSystem::paintEvent(QPaintEvent* e) {
     QPainter p(this);
 
     // draw the background
