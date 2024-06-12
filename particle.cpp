@@ -5,6 +5,8 @@
 
 void Particle::update_forces(float time_step) {
     speed += gravity * time_step;
+    speed = (grid->calculate_pressure_force(pos) / density) * time_step;
+
     pos += (speed * time_step).toPointF();
 
     resolve_world_border_collision();

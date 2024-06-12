@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    particle_system = new ParticleSystem(1, 0.1, 1.0, QSize(1000, 800), QSizeF(10.0, 8.0), 0.1, this);
+    particle_system = new ParticleSystem(20, 0.1, 0.7, QSize(1000, 800), QSizeF(10.0, 8.0), 0.1, this);
     ui->mainLayout->addWidget(particle_system);
     particle_system->setFocus();
     resize(1000, 800);

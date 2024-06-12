@@ -9,6 +9,8 @@
 #include <QPointF>
 #include "particle.h"
 
+#include <QDebug>
+
 using std::shared_ptr;
 
 class Particle;
@@ -22,9 +24,12 @@ public:
     Grid(QPoint _nb_cells, const QSizeF& _world_size);
     void add_particle(shared_ptr<Particle> particle);
     void update_particles(float time_step);
+    QVector2D calculate_pressure_force(QPointF pos);
 
 private:
-    void update_pos_on_grid(shared_ptr<Particle> particle, int old_cell_id, int i);
+    void update_particles_forces(float time_step);
+    void update_particles_pos_on_grid();
+    //void update_pos_on_grid(shared_ptr<Particle> particle, int old_cell_id, int i);
     int cell_id_from_world_pos(QPointF pos);
 
     QVector<QPoint> get_neighbor_cells(QPoint pos);
@@ -43,7 +48,6 @@ private:
     }
 
     float calculate_density(QPointF pos);
-    QVector2D calculate_density_gradient(QPointF pos);
     void update_densities();
 
 public:

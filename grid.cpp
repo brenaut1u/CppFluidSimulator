@@ -18,49 +18,81 @@ void Grid::update_particles(float time_step) {
     // over the grid. The grids are treated by groups of nine neighboring cells, which
     // allows to test collisions only with neighboring particles.
 
+    update_densities();
+    update_particles_forces(time_step);
+
     for (int i = 1; i < nb_cells.x() - 1; i++) {
         for (int j = 1; j < nb_cells.y() - 1; j++) {
             QVector<QPoint> cells = get_neighbor_cells({i, j});
 
             for (int c1 = 0; c1 < cells.size(); c1++) {
-                // for each of the nine cells
+                // for each of the neighbor cells
+
                 for (int p1 = 0; p1 < particles[cell_id_from_grid_pos(cells[c1])].size(); p1++) {
                     // for each particle in the cell
+
                     shared_ptr<Particle> particle1 = particles[cell_id_from_grid_pos(cells[c1])][p1];
-                    particle1->update_forces(time_step);
+                    //particle1->update_forces(time_step);
 
                     for (int c2 = c1; c2 < cells.size(); c2++) {
-                        // for each of the cells that hasn't been explored yet
+                        // for each of the neighbor cells that hasn't been explored yet
+
                         for (int p2 = 0; p2 < particles[cell_id_from_grid_pos(cells[c2])].size(); p2++) {
                             // for each of the other particles that hasn't been tested yet
+
                             if (c2 > c1 || p2 > p1) {
                                 shared_ptr<Particle> particle2 = particles[cell_id_from_grid_pos(cells[c2])][p2];
                                 particle1->test_collision(particle2);
-                                update_pos_on_grid(particle2, cell_id_from_grid_pos(cells[c2]), p2);
+                                //update_pos_on_grid(particle2, cell_id_from_grid_pos(cells[c2]), p2);
                             }
                         }
                     }
-                    update_pos_on_grid(particle1, cell_id_from_grid_pos(cells[c1]), p1);
-
-                    if (particle1->get_pos().y() > 1) {
-                        qDebug() << "cell: " << cell_id_from_grid_pos(cells[c1]) << " particle: " << p1;
-                    }
+                    //update_pos_on_grid(particle1, cell_id_from_grid_pos(cells[c1]), p1);
                 }
             }
         }
     }
-    update_densities();
+
+    update_particles_pos_on_grid();
 }
 
-void Grid::update_pos_on_grid(shared_ptr<Particle> particle, int old_cell_id, int i) {
-    // Updates the grid so as to place the particle in the right cell.
-    // i is the particle's index in the old cell.
-
-    int new_cell_id = cell_id_from_world_pos(particle->get_pos());
-
-    particles[old_cell_id].remove(i);
-    particles[new_cell_id].append(particle);
+void Grid::update_particles_forces(float time_step) {
+    for (auto cell : particles) {
+        for (auto particle : cell) {
+            particle->update_forces(time_step);
+        }
+    }
 }
+
+void Grid::update_particles_pos_on_grid() {
+    // Updates the grid so as to place all the particles in the right cell.
+
+    for (int i = 0; i < particles.size(); i++) {
+        int j = 0;
+        while (j < particles[i].size()) {
+            auto particle = particles[i][j];
+            int new_cell_id = cell_id_from_world_pos(particle->get_pos());
+
+            if (new_cell_id != i) {
+                particles[i].remove(j);
+                particles[new_cell_id].append(particle);
+            }
+            else {
+                j++;
+            }
+        }
+    }
+}
+
+//void Grid::update_pos_on_grid(shared_ptr<Particle> particle, int old_cell_id, int i) {
+//    // Updates the grid so as to place the particle in the right cell.
+//    // i is the particle's index in the old cell.
+
+//    int new_cell_id = cell_id_from_world_pos(particle->get_pos());
+
+//    particles[old_cell_id].remove(i);
+//    particles[new_cell_id].append(particle);
+//}
 
 int Grid::cell_id_from_world_pos(QPointF pos) {
     // Returns the id of the cell containing the world position
@@ -119,20 +151,24 @@ float Grid::calculate_density(QPointF pos) {
     return density;
 }
 
-QVector2D Grid::calculate_density_gradient(QPointF pos) {
-    QVector2D density_gradient = QVector2D(0, 0);
+QVector2D Grid::calculate_pressure_force(QPointF pos) {
+    QVector2D pressure_force = QVector2D(0, 0);
 
     QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
     for (QPoint cell : cells) {
         for (auto particle : particles[cell_id_from_grid_pos(cell)]) {
             QVector2D dir = QVector2D(particle->get_pos() - pos);
-            float slope = smoothing_kernel_derivative(particle->get_influence_radius(), dir.length());
-            float density = particle->get_density();
-            density_gradient -= dir.normalized() * slope;
+
+            //TODO: allow two particles to have the same position?
+            if (dir != QVector2D(0.0, 0.0)) {
+                float slope = smoothing_kernel_derivative(particle->get_influence_radius(), dir.length());
+                float density = particle->get_density();
+                pressure_force += density_to_pressure(density) * dir.normalized() * slope / density;
+            }
         }
     }
 
-    return density_gradient;
+    return pressure_force;
 }
 
 void Grid::update_densities() {
