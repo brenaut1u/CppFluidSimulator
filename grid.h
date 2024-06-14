@@ -21,15 +21,20 @@ class Grid
   Cells are identified by an id. The bottom left cell's id is 0, and the top right cell has the maximum id.
 **/
 public:
-    Grid(QPoint _nb_cells, const QSizeF& _world_size);
+    Grid(QPoint _nb_cells, const QSizeF& _world_size, shared_ptr<float> _g, shared_ptr<float> _collision_damping,
+         shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier);
+
     void add_particle(shared_ptr<Particle> particle);
     void update_particles(float time_step);
-    QVector2D calculate_pressure_force(QPointF pos);
+    QVector2D calculate_pressure_force(Particle* particle);
+    void change_grid(QPoint _nb_cells);
+
+    float get_g() {return *g;}
+    float get_collision_damping() {return *collision_damping;}
 
 private:
     void update_particles_forces(float time_step);
     void update_particles_pos_on_grid();
-    //void update_pos_on_grid(shared_ptr<Particle> particle, int old_cell_id, int i);
     int cell_id_from_world_pos(QPointF pos);
 
     QVector<QPoint> get_neighbor_cells(QPoint pos);
@@ -56,6 +61,17 @@ public:
 private:
     QPoint nb_cells;
     QVector<QVector<shared_ptr<Particle>>> particles; //an array containing the cells of the grid, containing pointers to the particles
+
+    shared_ptr<float> g;
+    shared_ptr<float> collision_damping;
+    shared_ptr<float> fluid_density;
+    shared_ptr<float> pressure_multiplier;
 };
+
+// These two functions are used to calculate the density
+float smoothing_kernel(float influence_radius, float distance);
+float smoothing_kernel_derivative(float influence_radius, float distance);
+
+float density_to_pressure(float density, float fluid_density, float pressure_multiplier);
 
 #endif // GRID_H

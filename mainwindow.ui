@@ -15,8 +15,127 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="mainLayout"/>
+    <item row="3" column="0">
+     <layout class="QVBoxLayout" name="mainLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout1">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutGravity">
+            <item>
+             <widget class="QLabel" name="labelGravity">
+              <property name="text">
+               <string>Gravity</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="GravitySlider">
+              <property name="singleStep">
+               <number>1</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelGravityValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutPressure">
+            <item>
+             <widget class="QLabel" name="labelPressure">
+              <property name="text">
+               <string>Pressure</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="PressureSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelPressureValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout2">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutInfluenceRadius">
+            <item>
+             <widget class="QLabel" name="labelInfluenceRadius">
+              <property name="text">
+               <string>Influence radius</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="InfluenceRadiusSlider">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelInfluenceRadiusValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutDensity">
+            <item>
+             <widget class="QLabel" name="labelDensity">
+              <property name="text">
+               <string>Density</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="DensitySlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelDensityValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
