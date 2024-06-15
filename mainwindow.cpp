@@ -12,7 +12,7 @@ inline const QSizeF world_size =  QSizeF(10.0, 8.0);
 inline constexpr float time_step = 0.01;
 inline constexpr float init_g = 0.0;
 inline constexpr float init_pressure_multiplier = 0.0;
-inline constexpr float init_fluid_density = 0.0;
+inline constexpr float init_fluid_density = 20.0;
 inline constexpr float init_collision_damping = 0.85;
 inline constexpr float particle_radius = 0.03;
 inline constexpr float init_particle_influence_radius = 0.25;
@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->labelInfluenceRadiusValue->setNum(init_particle_influence_radius);
     ui->labelDensityValue->setNum(init_fluid_density);
 
-    ui->GravitySlider->setValue(init_g * 20);
+    ui->GravitySlider->setValue(init_g * 10);
     ui->PressureSlider->setValue(10 * qLn(init_pressure_multiplier + 1));
     ui->InfluenceRadiusSlider->setValue(init_particle_influence_radius * 20);
     ui->DensitySlider->setValue(10 * qLn(init_fluid_density + 1));
@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 }
 
 void MainWindow::set_gravity(int val) {
-    float g = val / 20.0;
+    float g = val / 10.0;
     particle_system->set_g(g);
     ui->labelGravityValue->setNum(g);
 }

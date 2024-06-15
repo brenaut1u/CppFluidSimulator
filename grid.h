@@ -26,14 +26,13 @@ public:
 
     void add_particle(shared_ptr<Particle> particle);
     void update_particles(float time_step);
-    QVector2D calculate_pressure_force(Particle* particle);
     void change_grid(QPoint _nb_cells);
 
     float get_g() {return *g;}
     float get_collision_damping() {return *collision_damping;}
 
 private:
-    void update_particles_forces(float time_step);
+    void update_particles_update_pos_and_speed(float time_step);
     void update_particles_pos_on_grid();
     void update_predicted_pos(float time_step);
     int cell_id_from_world_pos(QPointF pos);
@@ -53,7 +52,8 @@ private:
         return {id % nb_cells.x(), id / nb_cells.x()};
     }
 
-    float calculate_density(QPointF pos, float influence_radius);
+    float calculate_density(shared_ptr<Particle> particle);
+    QVector2D calculate_pressure_force(shared_ptr<Particle> particle);
     void update_densities();
 
 public:

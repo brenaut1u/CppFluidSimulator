@@ -23,14 +23,23 @@ void Grid::update_particles(float time_step) {
 
     update_predicted_pos(time_step);
     update_densities();
-    update_particles_forces(time_step);
+    update_particles_update_pos_and_speed(time_step);
     update_particles_pos_on_grid();
 }
 
-void Grid::update_particles_forces(float time_step) {
+void Grid::update_particles_update_pos_and_speed(float time_step) {
+    // Updates the particles forces, position and speed
+
+    const QVector2D gravity = QVector2D(0, -(*g));
+
     for (auto cell : particles) {
         for (auto particle : cell) {
-            particle->update_forces(time_step);
+            QVector<QVector2D> forces = QVector<QVector2D>();
+            forces.append(gravity);
+            forces.append(calculate_pressure_force(particle) / particle->get_density());
+            particle->update_forces(forces);
+
+            particle->update_pos_and_speed(time_step);
         }
     }
 }
@@ -105,9 +114,10 @@ QVector<QPoint> Grid::get_neighbor_cells(QPoint pos) {
     return cells;
 }
 
-float Grid::calculate_density(QPointF pos, float influence_radius) {
+float Grid::calculate_density(shared_ptr<Particle> particle) {
     float density = 0;
 
+    QPointF pos = particle->get_predicted_pos();
     QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
     for (QPoint cell : cells) {
         for (auto particle : particles[cell_id_from_grid_pos(cell)]) {
@@ -117,11 +127,14 @@ float Grid::calculate_density(QPointF pos, float influence_radius) {
         }
     }
 
-    return density != 0 ? density : smoothing_kernel(influence_radius, 0);
+    // In some cases, when the predicted position is too far away from the current position, the density calculated above remains zero.
+    // So we need to prevent this, because it would cause divisions by zero.
+    return density != 0 ? density : smoothing_kernel(particle->get_influence_radius(), 0);
 }
 
-QVector2D Grid::calculate_pressure_force(Particle* particle) {
+QVector2D Grid::calculate_pressure_force(shared_ptr<Particle> particle) {
     QVector2D pressure_force = QVector2D(0, 0);
+
     QPointF pos = particle->get_predicted_pos();
     float density = particle->get_density();
 
@@ -147,7 +160,7 @@ QVector2D Grid::calculate_pressure_force(Particle* particle) {
 void Grid::update_densities() {
     for (auto cell : particles) {
         for (auto particle : cell) {
-            particle->update_density(calculate_density(particle->get_predicted_pos(), particle->get_influence_radius()));
+            particle->update_density(calculate_density(particle));
         }
     }
 }
