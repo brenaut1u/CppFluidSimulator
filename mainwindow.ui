@@ -74,6 +74,31 @@
             </item>
            </layout>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalInteractionRadius">
+            <item>
+             <widget class="QLabel" name="labelInteractionRadius">
+              <property name="text">
+               <string>Interaction radius</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="InteractionRadiusSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelInteractionRadiusValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </item>
         <item>
@@ -124,6 +149,31 @@
             </item>
             <item>
              <widget class="QLabel" name="labelDensityValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutInteractionStrength">
+            <item>
+             <widget class="QLabel" name="labelInteractionStrength">
+              <property name="text">
+               <string>Interaction strength</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="InteractionStrengthSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelInteractionStrengthValue">
               <property name="text">
                <string>0</string>
               </property>

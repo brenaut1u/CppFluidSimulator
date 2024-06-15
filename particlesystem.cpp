@@ -1,5 +1,6 @@
 #include <memory>
 #include <QtMath>
+#include <QMouseEvent>
 #include "qpainter.h"
 #include "particlesystem.h"
 
@@ -10,8 +11,10 @@ using std::shared_ptr;
 
 ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float _particle_influence_radius, const QSize& _im_size,
                                QSizeF _world_size, float _time_step, float _g, float _collision_damping, float _fluid_density,
-                               float _pressure_multiplier, QWidget *parent) :
-    QOpenGLWidget(parent), nb_particles(_nb_particles), particle_radius(_particle_radius), im_size(_im_size), world_size(_world_size), time_step(_time_step)
+                               float _pressure_multiplier, float _interaction_radius, float _interaction_strength,
+                               QWidget *parent) :
+         QOpenGLWidget(parent), nb_particles(_nb_particles), particle_radius(_particle_radius), time_step(_time_step),
+         im_size(_im_size), world_size(_world_size), interaction_radius(_interaction_radius), interaction_strength(_interaction_strength)
 {
     particle_influence_radius = make_shared<float>(_particle_influence_radius);
     g = make_shared<float>(_g);
@@ -37,10 +40,12 @@ ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float 
             particles.append(particle);
         }
     }
+
+    interaction = {{0, 0}, 0, 0};
 }
 
 void ParticleSystem::update_physics() {
-    grid->update_particles(time_step);
+    grid->update_particles(time_step, interaction);
     update();
 }
 
@@ -63,4 +68,34 @@ void ParticleSystem::paintEvent(QPaintEvent* e) {
     for (auto particle : particles) {
         p.drawEllipse(world_to_screen(particle->get_pos()), particle_draw_radius, particle_draw_radius);
     }
+
+    // draw the interaction circle
+    p.setBrush(Qt::NoBrush);
+    p.setPen(QPen(Qt::white));
+    int inter_radius = interaction.radius * im_size.width() / world_size.width();
+    p.drawEllipse(world_to_screen(interaction.pos), inter_radius, inter_radius);
+}
+
+void ParticleSystem::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        interaction.pos = screen_to_world(event->pos());
+        interaction.radius = interaction_radius;
+        interaction.strength = -interaction_strength;
+    }
+    else if (event->button() == Qt::RightButton) {
+        interaction.pos = screen_to_world(event->pos());
+        interaction.radius = interaction_radius;
+        interaction.strength = interaction_strength;
+    }
+}
+
+void ParticleSystem::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
+        interaction.radius = 0;
+        interaction.strength = 0;
+    }
+}
+
+void ParticleSystem::mouseMoveEvent(QMouseEvent *event) {
+    interaction.pos = screen_to_world(event->pos());
 }

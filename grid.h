@@ -7,6 +7,7 @@
 #include <QVector2D>
 #include <memory>
 #include <QPointF>
+#include "interaction.h"
 #include "particle.h"
 
 #include <QDebug>
@@ -25,14 +26,14 @@ public:
          shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier);
 
     void add_particle(shared_ptr<Particle> particle);
-    void update_particles(float time_step);
+    void update_particles(float time_step, const Interaction& interaction);
     void change_grid(QPoint _nb_cells);
 
     float get_g() {return *g;}
     float get_collision_damping() {return *collision_damping;}
 
 private:
-    void update_particles_update_pos_and_speed(float time_step);
+    void update_particles_pos_and_speed(float time_step, const Interaction& interaction);
     void update_particles_pos_on_grid();
     void update_predicted_pos(float time_step);
     int cell_id_from_world_pos(QPointF pos);
@@ -74,5 +75,6 @@ float smoothing_kernel(float influence_radius, float distance);
 float smoothing_kernel_derivative(float influence_radius, float distance);
 
 float density_to_pressure(float density, float fluid_density, float pressure_multiplier);
+QVector2D interaction_force(shared_ptr<Particle> particle, Interaction interaction);
 
 #endif // GRID_H

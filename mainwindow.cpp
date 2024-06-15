@@ -16,6 +16,8 @@ inline constexpr float init_fluid_density = 20.0;
 inline constexpr float init_collision_damping = 0.85;
 inline constexpr float particle_radius = 0.03;
 inline constexpr float init_particle_influence_radius = 0.25;
+inline constexpr float init_interaction_radius = 1.0;
+inline constexpr float init_interaction_strength = 50.0;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -30,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                                          init_collision_damping,
                                          init_fluid_density,
                                          init_pressure_multiplier,
+                                         init_interaction_radius,
+                                         init_interaction_strength,
                                          this);
 
     ui->mainLayout->addWidget(particle_system);
@@ -40,16 +44,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(ui->PressureSlider, QOverload<int>::of(&QSlider::valueChanged), this, &MainWindow::set_pressure);
     QObject::connect(ui->InfluenceRadiusSlider, QOverload<int>::of(&QSlider::valueChanged), this, &MainWindow::set_influence_radius);
     QObject::connect(ui->DensitySlider, QOverload<int>::of(&QSlider::valueChanged), this, &MainWindow::set_density);
+    QObject::connect(ui->InteractionRadiusSlider, QOverload<int>::of(&QSlider::valueChanged), this, &MainWindow::set_interaction_radius);
+    QObject::connect(ui->InteractionStrengthSlider, QOverload<int>::of(&QSlider::valueChanged), this, &MainWindow::set_interaction_strength);
 
     ui->labelGravityValue->setNum(init_g);
     ui->labelPressureValue->setNum(init_pressure_multiplier);
     ui->labelInfluenceRadiusValue->setNum(init_particle_influence_radius);
     ui->labelDensityValue->setNum(init_fluid_density);
+    ui->labelInteractionRadiusValue->setNum(init_interaction_radius);
+    ui->labelInteractionStrengthValue->setNum(init_interaction_strength);
 
     ui->GravitySlider->setValue(init_g * 10);
     ui->PressureSlider->setValue(10 * qLn(init_pressure_multiplier + 1));
     ui->InfluenceRadiusSlider->setValue(init_particle_influence_radius * 20);
     ui->DensitySlider->setValue(10 * qLn(init_fluid_density + 1));
+    ui->InteractionRadiusSlider->setValue(init_interaction_radius * 20);
+    ui->InteractionStrengthSlider->setValue(10 * qLn(init_interaction_strength + 1));
 
     auto timer = new QTimer(parent);
     QObject::connect(timer, SIGNAL(timeout()), particle_system, SLOT(update_physics()));
@@ -79,6 +89,19 @@ void MainWindow::set_density(int val) {
     particle_system->set_fluid_density(fluid_density);
     ui->labelDensityValue->setNum(fluid_density);
 }
+
+void MainWindow::set_interaction_radius(int val) {
+    float interaction_radius = val / 20.0;
+    particle_system->set_interaction_radius(interaction_radius);
+    ui->labelInteractionRadiusValue->setNum(interaction_radius);
+}
+
+void MainWindow::set_interaction_strength(int val) {
+    float interaction_strength = qExp(val / 10.0) - 1;
+    particle_system->set_interaction_strength(interaction_strength);
+    ui->labelInteractionStrengthValue->setNum(interaction_strength);
+}
+
 
 MainWindow::~MainWindow()
 {

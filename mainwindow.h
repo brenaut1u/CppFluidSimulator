@@ -15,10 +15,14 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+public slots:
     void set_gravity(int val);
     void set_pressure(int val);
     void set_influence_radius(int val);
     void set_density(int val);
+    void set_interaction_radius(int val);
+    void set_interaction_strength(int val);
 
 private:
     Ui::MainWindow* ui;

@@ -2,12 +2,6 @@
 
 #include <QDebug>
 
-Particle::Particle(float _radius, shared_ptr<float> _influence_radius, QPointF _pos, QVector2D _speed, shared_ptr<Grid> _grid) :
-        radius(_radius), influence_radius(_influence_radius), pos(_pos), speed(_speed), grid(_grid) {
-    forces = QVector<QVector2D>();
-    forces.append(QVector2D(0, -grid->get_g())); // gravity
-}
-
 void Particle::update_pos_and_speed(float time_step) {
     for (QVector2D force : forces) {
         speed += force * time_step;

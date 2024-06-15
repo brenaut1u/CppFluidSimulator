@@ -24,6 +24,7 @@ SOURCES += \
 
 HEADERS += \
     grid.h \
+    interaction.h \
     mainwindow.h \
     particle.h \
     particlesystem.h

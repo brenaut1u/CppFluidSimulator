@@ -1,11 +1,10 @@
-#include <QtGlobal>
 #include <QtMath>
 #include "grid.h"
 
 #include <QDebug>
 
 Grid::Grid(QPoint _nb_cells, const QSizeF& _world_size, shared_ptr<float> _g, shared_ptr<float> _collision_damping,
-           shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier) : nb_cells(_nb_cells), world_size(_world_size), g(_g),
+           shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier) : world_size(_world_size), nb_cells(_nb_cells), g(_g),
             collision_damping(_collision_damping), fluid_density(_fluid_density), pressure_multiplier(_pressure_multiplier)
 {
     particles = QVector<QVector<shared_ptr<Particle>>>(nb_cells.x() * nb_cells.y());
@@ -16,19 +15,19 @@ void Grid::add_particle(shared_ptr<Particle> particle) {
     particles[cell_id].append(particle);
 }
 
-void Grid::update_particles(float time_step) {
+void Grid::update_particles(float time_step, const Interaction& interaction) {
     // This function updates the particles' positions and physical states by iterating
     // over the grid. The grids are treated by groups of nine neighboring cells, which
     // allows to test collisions only with neighboring particles.
 
     update_predicted_pos(time_step);
     update_densities();
-    update_particles_update_pos_and_speed(time_step);
+    update_particles_pos_and_speed(time_step, interaction);
     update_particles_pos_on_grid();
 }
 
-void Grid::update_particles_update_pos_and_speed(float time_step) {
-    // Updates the particles forces, position and speed
+void Grid::update_particles_pos_and_speed(float time_step, const Interaction& interaction) {
+    // Updates the particles forces, position and speed, including the interaction force (when the user clicks on the particle system)
 
     const QVector2D gravity = QVector2D(0, -(*g));
 
@@ -37,6 +36,7 @@ void Grid::update_particles_update_pos_and_speed(float time_step) {
             QVector<QVector2D> forces = QVector<QVector2D>();
             forces.append(gravity);
             forces.append(calculate_pressure_force(particle) / particle->get_density());
+            forces.append(interaction_force(particle, interaction));
             particle->update_forces(forces);
 
             particle->update_pos_and_speed(time_step);
@@ -195,4 +195,19 @@ float density_to_pressure(float density, float fluid_density, float pressure_mul
     float density_error = density - fluid_density;
     float pressure = density_error * pressure_multiplier;
     return pressure;
+}
+
+QVector2D interaction_force(shared_ptr<Particle> particle, Interaction interaction) {
+    QVector2D interac_force = {0, 0};
+
+    QVector2D offset = QVector2D((interaction.pos - particle->get_pos()));
+    float dst = offset.length();
+
+    if (dst < interaction.radius) {
+        QVector2D dirToInputPoint = offset.normalized();
+        float centerT = 1 - dst / interaction.radius;
+        interac_force += (dirToInputPoint * interaction.strength - particle->get_speed()) * centerT;
+    }
+
+    return interac_force;
 }
