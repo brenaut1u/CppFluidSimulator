@@ -35,6 +35,7 @@ public:
 private:
     void update_particles_forces(float time_step);
     void update_particles_pos_on_grid();
+    void update_predicted_pos(float time_step);
     int cell_id_from_world_pos(QPointF pos);
 
     QVector<QPoint> get_neighbor_cells(QPoint pos);

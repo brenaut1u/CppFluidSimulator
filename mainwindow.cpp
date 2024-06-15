@@ -46,6 +46,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->labelInfluenceRadiusValue->setNum(init_particle_influence_radius);
     ui->labelDensityValue->setNum(init_fluid_density);
 
+    ui->GravitySlider->setValue(init_g * 20);
+    ui->PressureSlider->setValue(10 * qLn(init_pressure_multiplier + 1));
+    ui->InfluenceRadiusSlider->setValue(init_particle_influence_radius * 20);
+    ui->DensitySlider->setValue(10 * qLn(init_fluid_density + 1));
+
     auto timer = new QTimer(parent);
     QObject::connect(timer, SIGNAL(timeout()), particle_system, SLOT(update_physics()));
     timer->start(2);

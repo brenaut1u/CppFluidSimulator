@@ -18,9 +18,13 @@ public:
     void update_forces(float time_step);
     void test_collision(shared_ptr<Particle> other);
     QPointF get_pos() const {return pos;}
+    QPointF get_predicted_pos() const {return predicted_pos;}
     float get_influence_radius() const {return *influence_radius;}
     float get_density() const {return density;}
     void update_density(float _density) {density = _density;}
+    void update_predicted_pos(float time_step) {
+        predicted_pos = pos + (speed * time_step).toPointF();
+    }
 
 private:
     void resolve_world_border_collision(); // when the particle gets outside of the screen
@@ -29,6 +33,7 @@ private:
     float radius;
     shared_ptr<float> influence_radius;
     QPointF pos;
+    QPointF predicted_pos;
     QVector2D speed;
     float density;
     shared_ptr<Grid> grid;

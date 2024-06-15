@@ -47,7 +47,6 @@ private:
     QSizeF world_size;
     shared_ptr<Grid> grid;
     QVector<shared_ptr<Particle>> particles;
-    int counter;
 };
 
 #endif // PARTICLESYSTEM_H

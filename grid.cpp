@@ -21,6 +21,7 @@ void Grid::update_particles(float time_step) {
     // over the grid. The grids are treated by groups of nine neighboring cells, which
     // allows to test collisions only with neighboring particles.
 
+    update_predicted_pos(time_step);
     update_densities();
     update_particles_forces(time_step);
     update_particles_pos_on_grid();
@@ -30,6 +31,14 @@ void Grid::update_particles_forces(float time_step) {
     for (auto cell : particles) {
         for (auto particle : cell) {
             particle->update_forces(time_step);
+        }
+    }
+}
+
+void Grid::update_predicted_pos(float time_step) {
+    for (auto cell : particles) {
+        for (auto particle : cell) {
+            particle->update_predicted_pos(time_step);
         }
     }
 }
@@ -113,13 +122,13 @@ float Grid::calculate_density(QPointF pos) {
 
 QVector2D Grid::calculate_pressure_force(Particle* particle) {
     QVector2D pressure_force = QVector2D(0, 0);
-    QPointF pos = particle->get_pos();
+    QPointF pos = particle->get_predicted_pos();
     float density = particle->get_density();
 
     QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
     for (QPoint cell : cells) {
         for (auto particle2 : particles[cell_id_from_grid_pos(cell)]) {
-            QVector2D dir = QVector2D(particle2->get_pos() - pos);
+            QVector2D dir = QVector2D(particle2->get_predicted_pos() - pos);
 
             //TODO: allow two particles to have the same position?
             if (dir != QVector2D(0.0, 0.0)) {
@@ -138,7 +147,7 @@ QVector2D Grid::calculate_pressure_force(Particle* particle) {
 void Grid::update_densities() {
     for (auto cell : particles) {
         for (auto particle : cell) {
-            particle->update_density(calculate_density(particle->get_pos()));
+            particle->update_density(calculate_density(particle->get_predicted_pos()));
         }
     }
 }
