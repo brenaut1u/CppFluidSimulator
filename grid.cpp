@@ -105,19 +105,19 @@ QVector<QPoint> Grid::get_neighbor_cells(QPoint pos) {
     return cells;
 }
 
-float Grid::calculate_density(QPointF pos) {
+float Grid::calculate_density(QPointF pos, float influence_radius) {
     float density = 0;
 
     QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
     for (QPoint cell : cells) {
         for (auto particle : particles[cell_id_from_grid_pos(cell)]) {
-            float distance = QVector2D(particle->get_pos() - pos).length();
+            float distance = QVector2D(particle->get_predicted_pos() - pos).length();
             float influence = smoothing_kernel(particle->get_influence_radius(), distance);
             density += influence;
         }
     }
 
-    return density;
+    return density != 0 ? density : smoothing_kernel(influence_radius, 0);
 }
 
 QVector2D Grid::calculate_pressure_force(Particle* particle) {
@@ -147,7 +147,7 @@ QVector2D Grid::calculate_pressure_force(Particle* particle) {
 void Grid::update_densities() {
     for (auto cell : particles) {
         for (auto particle : cell) {
-            particle->update_density(calculate_density(particle->get_predicted_pos()));
+            particle->update_density(calculate_density(particle->get_predicted_pos(), particle->get_influence_radius()));
         }
     }
 }

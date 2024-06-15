@@ -22,9 +22,7 @@ public:
     float get_influence_radius() const {return *influence_radius;}
     float get_density() const {return density;}
     void update_density(float _density) {density = _density;}
-    void update_predicted_pos(float time_step) {
-        predicted_pos = pos + (speed * time_step).toPointF();
-    }
+    void update_predicted_pos(float time_step);
 
 private:
     void resolve_world_border_collision(); // when the particle gets outside of the screen

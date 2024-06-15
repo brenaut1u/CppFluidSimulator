@@ -34,3 +34,17 @@ void Particle::resolve_world_border_collision() {
         speed *= grid->get_collision_damping();
     }
 }
+
+void Particle::update_predicted_pos(float time_step) {
+    predicted_pos = pos + (speed * time_step).toPointF();
+
+    if (predicted_pos.x() - radius < 0)
+        predicted_pos.setX(radius);
+    else if (predicted_pos.x() + radius >= grid->world_size.width())
+        predicted_pos.setX(grid->world_size.width() - radius);
+
+    if (predicted_pos.y() - radius < 0)
+        predicted_pos.setY(radius);
+    else if (predicted_pos.y() + radius >= grid->world_size.height())
+        predicted_pos.setY(grid->world_size.height() - radius);
+}

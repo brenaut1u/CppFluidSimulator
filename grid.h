@@ -53,7 +53,7 @@ private:
         return {id % nb_cells.x(), id / nb_cells.x()};
     }
 
-    float calculate_density(QPointF pos);
+    float calculate_density(QPointF pos, float influence_radius);
     void update_densities();
 
 public:

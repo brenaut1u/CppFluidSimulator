@@ -6,7 +6,7 @@
 
 #include <QDebug>
 
-inline constexpr float nb_particles = 2000;
+inline constexpr float nb_particles = 4000;
 inline const QSize window_size = QSize(1000, 800);
 inline const QSizeF world_size =  QSizeF(10.0, 8.0);
 inline constexpr float time_step = 0.01;
@@ -14,7 +14,7 @@ inline constexpr float init_g = 0.0;
 inline constexpr float init_pressure_multiplier = 0.0;
 inline constexpr float init_fluid_density = 0.0;
 inline constexpr float init_collision_damping = 0.85;
-inline constexpr float particle_radius = 0.05;
+inline constexpr float particle_radius = 0.03;
 inline constexpr float init_particle_influence_radius = 0.25;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
