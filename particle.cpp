@@ -64,6 +64,10 @@ QColor blend_colors(QColor c1, QColor c2, float a) {
 }
 
 QColor speed_to_color(float speed) {
+    speed = speed >= max_speed ? max_speed : speed; // when the speed is too high, the euclidean division doesn't behave well because we
+                                                    // reach the upper limit for ints. So we set the speed at max_speed, because higher speeds
+                                                    // will appear with the same color anyway.
+
     float d = speed / (max_speed / 4);
     int q = int(d);
     float r = d - q;

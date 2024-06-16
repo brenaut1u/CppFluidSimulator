@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->labelInteractionRadiusValue->setNum(init_interaction_radius);
     ui->labelInteractionStrengthValue->setNum(init_interaction_strength);
 
-    ui->GravitySlider->setValue(init_g * 10);
+    ui->GravitySlider->setValue(init_g * 5);
     ui->PressureSlider->setValue(10 * qLn(init_pressure_multiplier + 1));
     ui->InfluenceRadiusSlider->setValue(init_particle_influence_radius * 20);
     ui->DensitySlider->setValue(10 * qLn(init_fluid_density + 1));
@@ -67,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 }
 
 void MainWindow::set_gravity(int val) {
-    float g = val / 10.0;
+    float g = val / 5.0;
     particle_system->set_g(g);
     ui->labelGravityValue->setNum(g);
 }
