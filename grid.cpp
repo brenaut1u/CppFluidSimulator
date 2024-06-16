@@ -8,7 +8,7 @@
 #include <QDebug>
 
 inline constexpr float epsilon = 0.0001;
-inline constexpr int nb_threads = 3;
+inline constexpr int nb_threads = 4;
 
 std::mutex mutex_update_particles_pos_on_grid;
 
