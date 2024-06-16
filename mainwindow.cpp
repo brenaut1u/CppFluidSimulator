@@ -6,7 +6,7 @@
 
 #include <QDebug>
 
-inline constexpr float nb_particles = 4000;
+inline constexpr float nb_particles = 10000;
 inline const QSize window_size = QSize(1000, 800);
 inline const QSizeF world_size =  QSizeF(10.0, 8.0);
 inline constexpr float time_step = 0.01;
