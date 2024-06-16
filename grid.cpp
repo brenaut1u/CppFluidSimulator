@@ -1,9 +1,16 @@
 #include <QtMath>
+#include <future>
+#include <thread>
+#include <mutex>
+#include <vector>
 #include "grid.h"
 
 #include <QDebug>
 
 inline constexpr float epsilon = 0.0001;
+inline constexpr int nb_threads = 3;
+
+std::mutex mutex_update_particles_pos_on_grid;
 
 Grid::Grid(QPoint _nb_cells, const QSizeF& _world_size, shared_ptr<float> _g, shared_ptr<float> _collision_damping,
            shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier, shared_ptr<float> _near_pressure_multiplier,
@@ -26,51 +33,91 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
     // over the grid. The grids are treated by groups of nine neighboring cells, which
     // allows to test collisions only with neighboring particles.
 
-    update_predicted_pos(time_step);
-    update_densities();
-    update_particles_pos_and_speed(time_step, interaction);
-    update_particles_pos_on_grid();
+    std::vector<std::future<void>> threads_update_predicted_pos = std::vector<std::future<void>>(nb_threads);
+    for (int i = 0; i < nb_threads; i++)
+        threads_update_predicted_pos[i] = std::async(&Grid::update_predicted_pos, this, time_step,
+                                                       i * particles.size() / nb_threads, (i + 1) * particles.size() / nb_threads);
+    for (int i = 0; i < nb_threads; i++) threads_update_predicted_pos[i].get();
+
+
+
+    std::vector<std::future<void>> threads_update_densities = std::vector<std::future<void>>(nb_threads);
+    for (int i = 0; i < nb_threads; i += 2)
+        threads_update_densities[i] = std::async(&Grid::update_densities, this,
+                                                 i * nb_cells.x() / nb_threads, (i + 1) * nb_cells.x() / nb_threads);
+    for (int i = 0; i < nb_threads; i += 2) threads_update_densities[i].get();
+
+    for (int i = 1; i < nb_threads; i += 2)
+        threads_update_densities[i] = std::async(&Grid::update_densities, this,
+                                                 i * nb_cells.x() / nb_threads, (i + 1) * nb_cells.x() / nb_threads);
+    for (int i = 1; i < nb_threads; i += 2) threads_update_densities[i].get();
+
+
+    std::vector<std::future<void>> threads_update_particles_pos_and_speed = std::vector<std::future<void>>(nb_threads);
+    for (int i = 0; i < nb_threads; i += 2)
+        threads_update_particles_pos_and_speed[i] = std::async(&Grid::update_particles_pos_and_speed, this, time_step, interaction,
+                                                 i * nb_cells.x() / nb_threads, (i + 1) * nb_cells.x() / nb_threads);
+    for (int i = 0; i < nb_threads; i += 2) threads_update_particles_pos_and_speed[i].get();
+
+    for (int i = 1; i < nb_threads; i += 2)
+        threads_update_particles_pos_and_speed[i] = std::async(&Grid::update_particles_pos_and_speed, this, time_step, interaction,
+                                                 i * nb_cells.x() / nb_threads, (i + 1) * nb_cells.x() / nb_threads);
+    for (int i = 1; i < nb_threads; i += 2) threads_update_particles_pos_and_speed[i].get();
+
+
+    std::vector<std::thread> threads_update_particles_pos_on_grid = std::vector<std::thread>(nb_threads);
+    for (int i = 0; i < nb_threads; i++)
+        threads_update_particles_pos_on_grid[i] = std::thread(&Grid::update_particles_pos_on_grid, this,
+                                                          i * particles.size() / nb_threads, (i + 1) * particles.size() / nb_threads);
+
+    for (int i = 0; i < nb_threads; i++) threads_update_particles_pos_on_grid[i].join();
 }
 
-void Grid::update_particles_pos_and_speed(float time_step, const Interaction& interaction) {
+void Grid::update_particles_pos_and_speed(float time_step, const Interaction& interaction, int start_cell_pos_x, int end_cell_pos_x) {
     // Updates the particles forces, position and speed, including the interaction force (when the user clicks on the particle system)
 
     const QVector2D gravity = QVector2D(0, -(*g));
 
-    for (auto cell : particles) {
-        for (auto particle : cell) {
-            QVector<QVector2D> forces = QVector<QVector2D>();
-            forces.append(gravity);
-            forces.append(calculate_pressure_force(particle) / particle->get_density());
-            forces.append(calculate_viscosity_force(particle));
-            forces.append(interaction_force(particle, interaction));
-            particle->update_forces(forces);
+    for (int i = start_cell_pos_x; i < qMin(end_cell_pos_x, nb_cells.x()); i++) {
+        for (int j = 0; j < nb_cells.y(); j++) {
+            for (auto particle : particles[cell_id_from_grid_pos({i, j})]) {
+                QVector<QVector2D> forces = QVector<QVector2D>();
+                forces.append(gravity);
+                forces.append(calculate_pressure_force(particle) / particle->get_density());
+                forces.append(calculate_viscosity_force(particle));
+                forces.append(interaction_force(particle, interaction));
+                particle->update_forces(forces);
 
-            particle->update_pos_and_speed(time_step);
+                particle->update_pos_and_speed(time_step);
+            }
         }
     }
 }
 
-void Grid::update_predicted_pos(float time_step) {
-    for (auto cell : particles) {
-        for (auto particle : cell) {
+void Grid::update_predicted_pos(float time_step, int start_cell_id, int end_cell_id) {
+    for (int i = start_cell_id; i < qMin(end_cell_id, particles.size()); i++) {
+        for (auto particle : particles[i]) {
             particle->update_predicted_pos(time_step);
         }
     }
 }
 
-void Grid::update_densities() {
-    for (auto cell : particles) {
-        for (auto particle : cell) {
-            particle->update_density(calculate_density(particle));
+void Grid::update_densities(int start_cell_pos_x, int end_cell_pos_x) {
+    for (int i = start_cell_pos_x; i < qMin(end_cell_pos_x, nb_cells.x()); i++) {
+        for (int j = 0; j < nb_cells.y(); j++) {
+            for (auto particle : particles[cell_id_from_grid_pos({i, j})]) {
+                particle->update_density(calculate_density(particle));
+            }
         }
     }
 }
 
-void Grid::update_particles_pos_on_grid() {
+void Grid::update_particles_pos_on_grid(int start_cell_id, int end_cell_id) {
     // Updates the grid so as to place all the particles in the right cell.
 
-    for (int i = 0; i < particles.size(); i++) {
+    std::lock_guard<std::mutex> guard(mutex_update_particles_pos_on_grid);
+
+    for (int i = start_cell_id; i < qMin(end_cell_id, particles.size()); i++) {
         int j = 0;
         while (j < particles[i].size()) {
             auto particle = particles[i][j];

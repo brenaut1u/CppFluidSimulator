@@ -37,10 +37,10 @@ public:
     float get_collision_damping() {return *collision_damping;}
 
 private:
-    void update_particles_pos_and_speed(float time_step, const Interaction& interaction);
-    void update_particles_pos_on_grid();
-    void update_predicted_pos(float time_step);
-    void update_densities();
+    void update_particles_pos_and_speed(float time_step, const Interaction& interaction, int start_cell_pos_x, int end_cell_pos_x);
+    void update_particles_pos_on_grid(int start_cell_id, int end_cell_id);
+    void update_predicted_pos(float time_step, int start_cell_id, int end_cell_id);
+    void update_densities(int start_cell_pos_x, int end_cell_pos_x);
     int cell_id_from_world_pos(QPointF pos);
 
     QVector<QPoint> get_neighbor_cells(QPoint pos);

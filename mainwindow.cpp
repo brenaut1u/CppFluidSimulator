@@ -15,7 +15,7 @@ inline constexpr float init_pressure_multiplier = 0.0;
 inline constexpr float init_near_pressure_multiplier = 0.0;
 inline constexpr float init_viscosity_multiplier = 0.0;
 inline constexpr float init_fluid_density = 20.0;
-inline constexpr float init_collision_damping = 0.85;
+inline constexpr float init_collision_damping = 0.15;
 inline constexpr float particle_radius = 0.03;
 inline constexpr float init_particle_influence_radius = 0.25;
 inline constexpr float init_interaction_radius = 1.0;
@@ -67,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->GravitySlider->setValue(init_g * 5);
     ui->PressureSlider->setValue(10 * qLn(init_pressure_multiplier + 1));
     ui->NearPressureSlider->setValue(10 * qLn(init_near_pressure_multiplier + 1));
-    ui->ViscositySlider->setValue(20 * init_viscosity_multiplier);
+    ui->ViscositySlider->setValue(10 * qLn(init_viscosity_multiplier + 1));
     ui->InfluenceRadiusSlider->setValue(init_particle_influence_radius * 20);
     ui->DensitySlider->setValue(10 * qLn(init_fluid_density + 1));
     ui->InteractionRadiusSlider->setValue(init_interaction_radius * 20);
@@ -98,7 +98,7 @@ void MainWindow::set_near_pressure(int val) {
 }
 
 void MainWindow::set_viscosity(int val) {
-    float viscosity_multiplier = val / 20.0;
+    float viscosity_multiplier = qExp(val / 10.0) - 1;
     particle_system->set_viscosity_multiplier(viscosity_multiplier);
     ui->labelViscosityValue->setNum(viscosity_multiplier);
 }
