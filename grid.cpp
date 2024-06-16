@@ -143,7 +143,6 @@ QVector2D Grid::calculate_pressure_force(shared_ptr<Particle> particle) {
         for (auto particle2 : particles[cell_id_from_grid_pos(cell)]) {
             QVector2D dir = QVector2D(particle2->get_predicted_pos() - pos);
 
-            //TODO: allow two particles to have the same position?
             if (dir != QVector2D(0.0, 0.0)) {
                 float slope = smoothing_kernel_derivative(particle2->get_influence_radius(), dir.length());
                 float density2 = particle2->get_density();

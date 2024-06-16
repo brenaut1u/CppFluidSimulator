@@ -2,6 +2,8 @@
 
 #include <QDebug>
 
+int Particle::particles_count = 0;
+
 void Particle::update_pos_and_speed(float time_step) {
     for (QVector2D force : forces) {
         speed += force * time_step;
@@ -10,6 +12,8 @@ void Particle::update_pos_and_speed(float time_step) {
     pos += (speed * time_step).toPointF();
 
     resolve_world_border_collision();
+
+    color = speed_to_color(speed.length());
 }
 
 void Particle::resolve_world_border_collision() {
@@ -48,4 +52,23 @@ void Particle::update_predicted_pos(float time_step) {
         predicted_pos.setY(radius);
     else if (predicted_pos.y() + radius >= grid->world_size.height())
         predicted_pos.setY(grid->world_size.height() - radius);
+}
+
+QColor blend_colors(QColor c1, QColor c2, float a) {
+    if (a < 0) return c1;
+    if (a > 1) return c2;
+
+    return QColor((1 - a) * c1.red() + a * c2.red(),
+                  (1 - a) * c1.green() + a * c2.green(),
+                  (1 - a) * c1.blue() + a * c2.blue());
+}
+
+QColor speed_to_color(float speed) {
+    float d = speed / (max_speed / 4);
+    int q = int(d);
+    float r = d - q;
+
+    if (q >= 4) return color_scale[4];
+
+    return blend_colors(color_scale[q], color_scale[q + 1], r);
 }

@@ -63,9 +63,9 @@ void ParticleSystem::paintEvent(QPaintEvent* e) {
     p.drawRect(0, 0, this->width(), this->height());
 
     // draw the particles
-    p.setBrush(QBrush(Qt::red));
     int particle_draw_radius = particle_radius * im_size.width() / world_size.width();
     for (auto particle : particles) {
+        p.setBrush(QBrush(particle->get_color()));
         p.drawEllipse(world_to_screen(particle->get_pos()), particle_draw_radius, particle_draw_radius);
     }
 
