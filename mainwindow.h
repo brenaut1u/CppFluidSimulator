@@ -19,10 +19,13 @@ public:
 public slots:
     void set_gravity(int val);
     void set_pressure(int val);
+    void set_near_pressure(int val);
+    void set_viscosity(int val);
     void set_influence_radius(int val);
     void set_density(int val);
     void set_interaction_radius(int val);
     void set_interaction_strength(int val);
+    void set_collision_damping(int val);
 
 private:
     Ui::MainWindow* ui;

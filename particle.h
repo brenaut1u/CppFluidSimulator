@@ -6,6 +6,7 @@
 #include <QVector>
 #include <QColor>
 #include <memory>
+#include <utility>
 #include "grid.h"
 
 inline constexpr QColor color_scale[5] = { {0  , 0  , 255},
@@ -17,6 +18,7 @@ inline constexpr QColor color_scale[5] = { {0  , 0  , 255},
 inline constexpr float max_speed = 4; // The speed coresponding to the top of the color scale, but particles' speed can be higher
 
 using std::shared_ptr;
+using std::pair;
 
 class Grid;
 
@@ -28,7 +30,7 @@ public:
 
     void update_pos_and_speed(float time_step);
     void update_forces(QVector<QVector2D>& _forces) {forces = std::move(_forces);}
-    void update_density(float _density) {density = _density;}
+    void update_density(pair<float, float> densities);
     void update_predicted_pos(float time_step);
 
     QPointF get_pos() const {return pos;}
@@ -36,6 +38,7 @@ public:
     QPointF get_predicted_pos() const {return predicted_pos;}
     float get_influence_radius() const {return *influence_radius;}
     float get_density() const {return density;}
+    float get_near_density() const {return near_density;}
 
     int get_id() const {return id;}
     QColor get_color() const {return color;}
@@ -56,6 +59,7 @@ private:
     QVector2D speed;
     QVector<QVector2D> forces;
     float density;
+    float near_density;
     shared_ptr<Grid> grid;
 };
 

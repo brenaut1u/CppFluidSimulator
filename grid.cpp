@@ -3,11 +3,17 @@
 
 #include <QDebug>
 
+inline constexpr float epsilon = 0.0001;
+
 Grid::Grid(QPoint _nb_cells, const QSizeF& _world_size, shared_ptr<float> _g, shared_ptr<float> _collision_damping,
-           shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier) : world_size(_world_size), nb_cells(_nb_cells), g(_g),
-            collision_damping(_collision_damping), fluid_density(_fluid_density), pressure_multiplier(_pressure_multiplier)
+           shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier, shared_ptr<float> _near_pressure_multiplier,
+           shared_ptr<float> _viscosity_multiplier) :
+                world_size(_world_size), nb_cells(_nb_cells), g(_g), collision_damping(_collision_damping),
+                fluid_density(_fluid_density), pressure_multiplier(_pressure_multiplier), near_pressure_multiplier(_near_pressure_multiplier),
+                viscosity_multiplier(_viscosity_multiplier)
 {
     particles = QVector<QVector<shared_ptr<Particle>>>(nb_cells.x() * nb_cells.y());
+    random = QRandomGenerator();
 }
 
 void Grid::add_particle(shared_ptr<Particle> particle) {
@@ -36,6 +42,7 @@ void Grid::update_particles_pos_and_speed(float time_step, const Interaction& in
             QVector<QVector2D> forces = QVector<QVector2D>();
             forces.append(gravity);
             forces.append(calculate_pressure_force(particle) / particle->get_density());
+            forces.append(calculate_viscosity_force(particle));
             forces.append(interaction_force(particle, interaction));
             particle->update_forces(forces);
 
@@ -48,6 +55,14 @@ void Grid::update_predicted_pos(float time_step) {
     for (auto cell : particles) {
         for (auto particle : cell) {
             particle->update_predicted_pos(time_step);
+        }
+    }
+}
+
+void Grid::update_densities() {
+    for (auto cell : particles) {
+        for (auto particle : cell) {
+            particle->update_density(calculate_density(particle));
         }
     }
 }
@@ -114,41 +129,65 @@ QVector<QPoint> Grid::get_neighbor_cells(QPoint pos) {
     return cells;
 }
 
-float Grid::calculate_density(shared_ptr<Particle> particle) {
+pair<float, float> Grid::calculate_density(const shared_ptr<Particle>& particle) {
     float density = 0;
+    float near_density = 0;
 
     QPointF pos = particle->get_predicted_pos();
     QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
     for (QPoint cell : cells) {
-        for (auto particle : particles[cell_id_from_grid_pos(cell)]) {
-            float distance = QVector2D(particle->get_predicted_pos() - pos).length();
-            float influence = smoothing_kernel(particle->get_influence_radius(), distance);
+        for (auto particle2 : particles[cell_id_from_grid_pos(cell)]) {
+            float distance = QVector2D(particle2->get_predicted_pos() - pos).length();
+            float influence = density_smoothing_kernel(particle->get_influence_radius(), distance);
             density += influence;
+
+            float near_influence = near_density_smoothing_kernel(particle->get_influence_radius(), distance);
+            near_density += near_influence;
         }
     }
 
     // In some cases, when the predicted position is too far away from the current position, the density calculated above remains zero.
     // So we need to prevent this, because it would cause divisions by zero.
-    return density != 0 ? density : smoothing_kernel(particle->get_influence_radius(), 0);
+    density = density != 0 ? density : density_smoothing_kernel(particle->get_influence_radius(), 0);
+    near_density = near_density != 0 ? near_density : near_density_smoothing_kernel(particle->get_influence_radius(), 0);
+
+    return {density, near_density};
 }
 
-QVector2D Grid::calculate_pressure_force(shared_ptr<Particle> particle) {
+pair<float, float> Grid::density_to_pressure(float density, float near_density) {
+    float density_error = density - *fluid_density;
+    float pressure = density_error * *pressure_multiplier;
+    float near_pressure = near_density * *near_pressure_multiplier;
+    return {pressure, near_pressure};
+}
+
+QVector2D Grid::calculate_pressure_force(const shared_ptr<Particle>& particle) {
     QVector2D pressure_force = QVector2D(0, 0);
 
     QPointF pos = particle->get_predicted_pos();
     float density = particle->get_density();
+    float near_density = particle->get_near_density();
 
     QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
     for (QPoint cell : cells) {
         for (auto particle2 : particles[cell_id_from_grid_pos(cell)]) {
-            QVector2D dir = QVector2D(particle2->get_predicted_pos() - pos);
+            if (particle2->get_id() != particle->get_id()) {
+                QVector2D dir = QVector2D(particle2->get_predicted_pos() - pos);
 
-            if (dir != QVector2D(0.0, 0.0)) {
-                float slope = smoothing_kernel_derivative(particle2->get_influence_radius(), dir.length());
+                float slope = density_smoothing_kernel_derivative(particle->get_influence_radius(), dir.length());
+
+                while (dir.length() <= epsilon) {
+                    dir = QVector2D(random.generateDouble() * 2 - 1, random.generateDouble() * 2 - 1);
+                }
+
                 float density2 = particle2->get_density();
-                float pressure = (density_to_pressure(density, *fluid_density, *pressure_multiplier)
-                                  + density_to_pressure(density2, *fluid_density, *pressure_multiplier)) / 2.0;
-                pressure_force += pressure * dir.normalized() * slope / density;
+                float near_density2 = particle2->get_near_density();
+
+                auto [pressure, near_pressure] = density_to_pressure(density, near_density);
+                auto [pressure2, near_pressure2] = density_to_pressure(density2, near_density2);
+
+                pressure_force += 0.5 * (pressure + pressure2) * dir.normalized() * slope / density
+                                 + 0.5 * (near_pressure + near_pressure2) * dir.normalized() * slope / near_density;
             }
         }
     }
@@ -156,12 +195,23 @@ QVector2D Grid::calculate_pressure_force(shared_ptr<Particle> particle) {
     return pressure_force;
 }
 
-void Grid::update_densities() {
-    for (auto cell : particles) {
-        for (auto particle : cell) {
-            particle->update_density(calculate_density(particle));
+QVector2D Grid::calculate_viscosity_force(const shared_ptr<Particle>& particle) {
+    QVector2D viscosity_force = QVector2D(0, 0);
+
+    QPointF pos = particle->get_predicted_pos();
+
+    QVector<QPoint> cells = get_neighbor_cells(cell_id_from_world_pos(pos));
+    for (QPoint cell : cells) {
+        for (auto particle2 : particles[cell_id_from_grid_pos(cell)]) {
+            if (particle2->get_id() != particle->get_id()) {
+                float dst = QVector2D(particle2->get_pos() - pos).length();
+                float influence = viscosity_smoothing_kernel(particle->get_influence_radius(), dst);
+                viscosity_force += (particle2->get_speed() - particle->get_speed()) * influence;
+            }
         }
     }
+
+    return viscosity_force * *viscosity_multiplier;
 }
 
 void Grid::change_grid(QPoint _nb_cells) {
@@ -178,22 +228,34 @@ void Grid::change_grid(QPoint _nb_cells) {
     particles = new_particles;
 }
 
-float smoothing_kernel(float influence_radius, float distance) {
+float density_smoothing_kernel(float influence_radius, float distance) {
     if (distance >= influence_radius) return 0;
     float volume = M_PI * qPow(influence_radius, 4) / 6;
     return (influence_radius - distance) * (influence_radius - distance) / volume;
 }
 
-float smoothing_kernel_derivative(float influence_radius, float distance) {
+float density_smoothing_kernel_derivative(float influence_radius, float distance) {
     if (distance >= influence_radius) return 0;
     float scale = 12 / (M_PI * qPow(influence_radius, 4));
-    return scale * (distance - influence_radius);
+    return -scale * (influence_radius - distance);
 }
 
-float density_to_pressure(float density, float fluid_density, float pressure_multiplier) {
-    float density_error = density - fluid_density;
-    float pressure = density_error * pressure_multiplier;
-    return pressure;
+float near_density_smoothing_kernel(float influence_radius, float distance) {
+    if (distance >= influence_radius) return 0;
+    float volume = M_PI * qPow(influence_radius, 5) / 10;
+    return qPow((influence_radius - distance), 3) / volume;
+}
+
+float near_density_smoothing_kernel_derivative(float influence_radius, float distance) {
+    if (distance >= influence_radius) return 0;
+    float scale = 30 / (M_PI * qPow(influence_radius, 5));
+    return -scale * (influence_radius - distance) * (influence_radius - distance);
+}
+
+float viscosity_smoothing_kernel(float influence_radius, float distance) {
+    if (distance >= influence_radius) return 0;
+    float value = influence_radius * influence_radius - distance * distance;
+    return qPow(value, 3);
 }
 
 QVector2D interaction_force(shared_ptr<Particle> particle, Interaction interaction) {

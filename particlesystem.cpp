@@ -11,8 +11,8 @@ using std::shared_ptr;
 
 ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float _particle_influence_radius, const QSize& _im_size,
                                QSizeF _world_size, float _time_step, float _g, float _collision_damping, float _fluid_density,
-                               float _pressure_multiplier, float _interaction_radius, float _interaction_strength,
-                               QWidget *parent) :
+                               float _pressure_multiplier, float _near_pressure_multiplier, float _viscosity_multiplier,
+                               float _interaction_radius, float _interaction_strength, QWidget *parent) :
          QOpenGLWidget(parent), nb_particles(_nb_particles), particle_radius(_particle_radius), time_step(_time_step),
          im_size(_im_size), world_size(_world_size), interaction_radius(_interaction_radius), interaction_strength(_interaction_strength)
 {
@@ -21,6 +21,8 @@ ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float 
     collision_damping = make_shared<float>(_collision_damping);
     fluid_density = make_shared<float>(_fluid_density);
     pressure_multiplier = make_shared<float>(_pressure_multiplier);
+    near_pressure_multiplier = make_shared<float>(_near_pressure_multiplier);
+    viscosity_multiplier = make_shared<float>(_viscosity_multiplier);
 
     this->setMinimumSize(im_size.width(), im_size.height());
 
@@ -30,7 +32,9 @@ ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float 
                              g,
                              collision_damping,
                              fluid_density,
-                             pressure_multiplier);
+                             pressure_multiplier,
+                             near_pressure_multiplier,
+                             viscosity_multiplier);
 
     int n = qSqrt(nb_particles);
     for (int i = 0; i < n; i++) {

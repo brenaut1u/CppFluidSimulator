@@ -5,7 +5,9 @@
 #include <QSizeF>
 #include <QVector>
 #include <QVector2D>
+#include <QRandomGenerator>
 #include <memory>
+#include <utility>
 #include <QPointF>
 #include "interaction.h"
 #include "particle.h"
@@ -13,6 +15,7 @@
 #include <QDebug>
 
 using std::shared_ptr;
+using std::pair;
 
 class Particle;
 
@@ -23,7 +26,8 @@ class Grid
 **/
 public:
     Grid(QPoint _nb_cells, const QSizeF& _world_size, shared_ptr<float> _g, shared_ptr<float> _collision_damping,
-         shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier);
+         shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier, shared_ptr<float> _near_pressure_multiplier,
+         shared_ptr<float> _viscosity_multiplier);
 
     void add_particle(shared_ptr<Particle> particle);
     void update_particles(float time_step, const Interaction& interaction);
@@ -36,6 +40,7 @@ private:
     void update_particles_pos_and_speed(float time_step, const Interaction& interaction);
     void update_particles_pos_on_grid();
     void update_predicted_pos(float time_step);
+    void update_densities();
     int cell_id_from_world_pos(QPointF pos);
 
     QVector<QPoint> get_neighbor_cells(QPoint pos);
@@ -53,9 +58,10 @@ private:
         return {id % nb_cells.x(), id / nb_cells.x()};
     }
 
-    float calculate_density(shared_ptr<Particle> particle);
-    QVector2D calculate_pressure_force(shared_ptr<Particle> particle);
-    void update_densities();
+    pair<float, float> calculate_density(const shared_ptr<Particle>& particle);
+    pair<float, float> density_to_pressure(float density, float near_density);
+    QVector2D calculate_pressure_force(const shared_ptr<Particle>& particle);
+    QVector2D calculate_viscosity_force(const shared_ptr<Particle>& particle);
 
 public:
     const QSizeF& world_size;
@@ -68,13 +74,21 @@ private:
     shared_ptr<float> collision_damping;
     shared_ptr<float> fluid_density;
     shared_ptr<float> pressure_multiplier;
+    shared_ptr<float> near_pressure_multiplier;
+    shared_ptr<float> viscosity_multiplier;
+
+    QRandomGenerator random; // used to give random directions to particles that end up at the same position
 };
 
-// These two functions are used to calculate the density
-float smoothing_kernel(float influence_radius, float distance);
-float smoothing_kernel_derivative(float influence_radius, float distance);
+// These four functions are used to calculate the density
+float density_smoothing_kernel(float influence_radius, float distance);
+float density_smoothing_kernel_derivative(float influence_radius, float distance);
+float near_density_smoothing_kernel(float influence_radius, float distance);
+float near_density_smoothing_kernel_derivative(float influence_radius, float distance);
 
-float density_to_pressure(float density, float fluid_density, float pressure_multiplier);
+// This function is used to calculate the viscosity
+float viscosity_smoothing_kernel(float influence_radius, float distance);
+
 QVector2D interaction_force(shared_ptr<Particle> particle, Interaction interaction);
 
 #endif // GRID_H

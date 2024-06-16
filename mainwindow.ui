@@ -75,7 +75,57 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalInteractionRadius">
+           <layout class="QHBoxLayout" name="horizontalLayoutViscosity">
+            <item>
+             <widget class="QLabel" name="labelViscosity">
+              <property name="text">
+               <string>Viscosity</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="ViscositySlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelViscosityValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutDensity">
+            <item>
+             <widget class="QLabel" name="labelDensity">
+              <property name="text">
+               <string>Density</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="DensitySlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelDensityValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutInteractionRadius">
             <item>
              <widget class="QLabel" name="labelInteractionRadius">
               <property name="text">
@@ -100,6 +150,22 @@
            </layout>
           </item>
          </layout>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>50</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout2">
@@ -132,29 +198,70 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayoutDensity">
+           <layout class="QHBoxLayout" name="horizontalLayoutNearPressure">
             <item>
-             <widget class="QLabel" name="labelDensity">
+             <widget class="QLabel" name="labelNearPressure">
               <property name="text">
-               <string>Density</string>
+               <string>Near pressure</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSlider" name="DensitySlider">
+             <widget class="QSlider" name="NearPressureSlider">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="labelDensityValue">
+             <widget class="QLabel" name="labelNearPressureValue">
               <property name="text">
                <string>0</string>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutCollisionDamping">
+            <item>
+             <widget class="QLabel" name="labelCollisionDamping">
+              <property name="text">
+               <string>Collision damping</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="CollisionDampinglSlider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelCollisionDampingValue">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayoutInteractionStrength">

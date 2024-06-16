@@ -4,6 +4,11 @@
 
 int Particle::particles_count = 0;
 
+void Particle::update_density(pair<float, float> densities) {
+    density = std::get<0>(densities);
+    near_density = std::get<1>(densities);
+}
+
 void Particle::update_pos_and_speed(float time_step) {
     for (QVector2D force : forces) {
         speed += force * time_step;
