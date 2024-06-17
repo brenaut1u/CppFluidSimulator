@@ -21,9 +21,12 @@ class Particle;
 
 class Grid
 {
-/**
-  Cells are identified by an id. The bottom left cell's id is 0, and the top right cell has the maximum id.
-**/
+    /**
+      *This class represents the grid that divides the world into cells. This is an optimisation that allows to avoid
+      *having to loop over all the particles for each particle in order to check proximity forces (pressure, viscosity...).
+      *Instead, the particles only loop over the neighboring cells.
+      *Cells are identified by an id. The bottom left cell's id is 0, and the top right cell has the maximum id.
+      */
 public:
     Grid(QPoint _nb_cells, const QSizeF& _world_size, shared_ptr<float> _g, shared_ptr<float> _collision_damping,
          shared_ptr<float> _fluid_density, shared_ptr<float> _pressure_multiplier, shared_ptr<float> _near_pressure_multiplier,
@@ -89,6 +92,7 @@ float near_density_smoothing_kernel_derivative(float influence_radius, float dis
 // This function is used to calculate the viscosity
 float viscosity_smoothing_kernel(float influence_radius, float distance);
 
+// Interaction with the user
 QVector2D interaction_force(shared_ptr<Particle> particle, Interaction interaction);
 
 #endif // GRID_H

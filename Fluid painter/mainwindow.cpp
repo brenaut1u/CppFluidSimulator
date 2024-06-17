@@ -20,8 +20,6 @@ inline constexpr float init_fluid_density = 120.0;
 inline constexpr float init_collision_damping = 0.15;
 inline constexpr float init_particle_radius = 0.03;
 inline constexpr float init_particle_influence_radius = 0.25;
-inline constexpr float init_interaction_radius = 1.0;
-inline constexpr float init_interaction_strength = 50.0;
 inline const QColor init_default_color = Qt::white;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -39,8 +37,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                                          init_pressure_multiplier,
                                          init_near_pressure_multiplier,
                                          init_viscosity_multiplier,
-                                         init_interaction_radius,
-                                         init_interaction_strength,
                                          init_default_color,
                                          this);
 

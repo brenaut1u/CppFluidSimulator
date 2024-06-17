@@ -22,8 +22,13 @@ using std::pair;
 
 class Grid;
 
+
 class Particle
 {
+    /**
+     * This class represents a single particle (a tiny piece of liquid).
+     */
+
 public:
     Particle(float _radius, shared_ptr<float> _influence_radius, QPointF _pos, QVector2D _speed, shared_ptr<Grid> _grid) :
             radius(_radius), influence_radius(_influence_radius), pos(_pos), speed(_speed), grid(_grid) {id = particles_count++;}

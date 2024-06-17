@@ -22,11 +22,9 @@ using std::make_unique;
 ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float _particle_influence_radius, const QSize& _im_size,
                                QSizeF _world_size, float _time_step, float _g, float _collision_damping, float _fluid_density,
                                float _pressure_multiplier, float _near_pressure_multiplier, float _viscosity_multiplier,
-                               float _interaction_radius, float _interaction_strength,
                                QColor _particle_default_color, QWidget *parent) :
          QOpenGLWidget(parent), nb_particles(_nb_particles), time_step(_time_step),
-         im_size(_im_size), world_size(_world_size), interaction_radius(_interaction_radius), interaction_strength(_interaction_strength),
-         particle_default_color(_particle_default_color)
+         im_size(_im_size), world_size(_world_size), particle_default_color(_particle_default_color)
 {
     particle_radius = make_shared<float>(_particle_radius);
     particle_influence_radius = make_shared<float>(_particle_influence_radius);
@@ -38,8 +36,6 @@ ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float 
     viscosity_multiplier = make_shared<float>(_viscosity_multiplier);
 
     this->setMinimumSize(im_size.width(), im_size.height());
-
-    interaction = {{0, 0}, 0, 0};
 
     particles = QVector<shared_ptr<Particle>>();
 
@@ -75,7 +71,7 @@ void ParticleSystem::update_physics() {
             create_particles();
         }
 
-        grid->update_particles(time_step, interaction);
+        grid->update_particles(time_step);
         update();
 
         frame++;
@@ -88,8 +84,6 @@ void ParticleSystem::start_preview() {
     end_frame = -1;
     frame = 0;
     playing = true;
-    video_writer = make_unique<QAviWriter>("demo.avi", im_size, 24, "MJPG");
-    video_writer->open();
 }
 
 void ParticleSystem::stop_preview() {
@@ -98,13 +92,17 @@ void ParticleSystem::stop_preview() {
 }
 
 void ParticleSystem::start_animation() {
+    // Starts the "beautiful", final render, with colored particles
     reset_particles();
     frame = 0;
     playing = true;
     recording = true;
+    video_writer = make_unique<QAviWriter>("render.avi", im_size, 24, "MJPG");
+    video_writer->open();
 }
 
 void ParticleSystem::create_particles() {
+    // Creates several particles on both sides of the screen, at the top
     int n = (world_size.height() / 10.0) / (particles_init_spacing * *particle_radius);
 
     for (int j = 0; j < n && particles.size() <= nb_particles - 2; j++) {
@@ -126,6 +124,7 @@ void ParticleSystem::create_particles() {
 }
 
 void ParticleSystem::reset_particles() {
+    // Resets the particles and the grid
     particles = QVector<shared_ptr<Particle>>();
 
     grid = make_shared<Grid>(QPoint(world_size.width() / *particle_influence_radius,
@@ -173,6 +172,7 @@ void ParticleSystem::set_image(QString filename) {
 }
 
 void ParticleSystem::set_particles_colors_image() {
+    // Sets the particles color according to the image
     for (auto particle : particles) {
         QPoint pos = world_to_screen(particle->get_pos());
 
@@ -197,8 +197,6 @@ void ParticleSystem::set_particles_colors_image() {
 }
 
 void ParticleSystem::paintEvent(QPaintEvent* e) {
-    //QPainter p(this);
-
     QPixmap pixmap(im_size);
     QPainter p(&pixmap);
 

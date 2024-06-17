@@ -28,7 +28,6 @@ SOURCES += \
 
 HEADERS += \
     grid.h \
-    interaction.h \
     libqtavi/QAviWriter.h \
     libqtavi/avi-utils.h \
     libqtavi/fileio.h \

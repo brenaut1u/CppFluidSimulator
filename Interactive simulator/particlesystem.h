@@ -13,6 +13,10 @@ using std::shared_ptr;
 
 class ParticleSystem : public QOpenGLWidget
 {
+    /**
+      * This class serves as an interface between the ui and the particles (through the grid).
+      */
+
     Q_OBJECT
 public:
     explicit ParticleSystem(int _nb_particles, float _particle_radius, float _particle_influence_radius, const QSize& _im_size,
@@ -67,7 +71,7 @@ private:
     shared_ptr<Grid> grid;
     QVector<shared_ptr<Particle>> particles;
 
-    Interaction interaction;
+    Interaction interaction; // the user interaction with the particles, when clicking on the screen
     float interaction_radius = 0;
     float interaction_strength = 0;
 };

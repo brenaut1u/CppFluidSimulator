@@ -11,19 +11,21 @@
 #include <memory>
 #include "libqtavi/QAviWriter.h"
 #include "grid.h"
-#include "interaction.h"
 
 using std::shared_ptr;
 using std::unique_ptr;
 
 class ParticleSystem : public QOpenGLWidget
 {
+/**
+  * This class serves as an interface between the ui and the particles (through the grid).
+  */
+
     Q_OBJECT
 public:
     explicit ParticleSystem(int _nb_particles, float _particle_radius, float _particle_influence_radius, const QSize& _im_size,
                                             QSizeF _world_size, float _time_step, float _g, float _collision_damping, float _fluid_density,
                                             float _pressure_multiplier, float _near_pressure_multiplier, float _viscosity_multiplier,
-                                            float _interaction_radius, float _interaction_strength,
                                             QColor _particle_default_color, QWidget *parent = nullptr);
 
     void paintEvent(QPaintEvent* e) override;
@@ -49,8 +51,6 @@ public:
     void set_pressure_multiplier(float _pressure_multiplier) {*pressure_multiplier = _pressure_multiplier;}
     void set_near_pressure_multiplier(float _near_pressure_multiplier) {*near_pressure_multiplier = _near_pressure_multiplier;}
     void set_viscosity_multiplier(float _viscosity_multiplier) {*viscosity_multiplier = _viscosity_multiplier;}
-    void set_interaction_radius(float _interaction_radius) {interaction_radius = _interaction_radius;}
-    void set_interaction_strength(float _interaction_strength) {interaction_strength = _interaction_strength;}
     void set_collision_damping(float _collision_damping) {*collision_damping = _collision_damping;}
 
     void update_physics();
@@ -63,7 +63,7 @@ public slots:
     void update_view();
 
 signals:
-    void animation_done();
+    void animation_done(); // When the complete, colorful render is done
 
 private:
     QPoint world_to_screen(QPointF world_pos) {
@@ -97,21 +97,17 @@ private:
 
     QColor particle_default_color;
 
-    Interaction interaction;
-    float interaction_radius = 0;
-    float interaction_strength = 0;
+    bool playing = false; // If we are playing the simulation (preview or final render)
+    int frame = 0; // The current animation frame
+    int end_frame = -1; // When it is -1, the animation doesn't stop (for preview).
+    bool recording = false; // is true when we are playing the "beautiful", final render, which is exported to a video file
+    unique_ptr<QAviWriter> video_writer; // used to generate the video file
 
-    bool playing = false;
-    int frame = 0;
-    int end_frame = -1;
-    bool recording = false;
-    unique_ptr<QAviWriter> video_writer;
-
-    QVector<QColor> colors;
+    QVector<QColor> colors; // the particles colors (matching by the ids of the particles)
     unique_ptr<QImage> image = nullptr;
-    QRectF image_rec;
-    QString move_rec_mode = "";
-    QPoint click_pos;
+    QRectF image_rec; // the rectangle containing the image on screen
+    QString move_rec_mode = ""; // determines how we are moving/resizing the rectangle
+    QPoint click_pos; // the position on screen where the user clicked
     QPointF click_image_rec_pos; // image_rec position at click time (used to move the rec)
 };
 

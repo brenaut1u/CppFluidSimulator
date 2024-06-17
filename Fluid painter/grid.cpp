@@ -8,7 +8,9 @@
 #include <QDebug>
 
 inline constexpr float epsilon = 0.0001;
-inline constexpr int nb_threads = 1;
+inline constexpr int nb_threads = 1; // For unknown reasons, multithread prevents the simulation from being deterministic,
+                                     // despite having implemented solutions that were supposed to prevent that issue, from
+                                     // https://www.youtube.com/watch?v=9IULfQH7E90
 
 std::mutex mutex_update_particles_pos_on_grid;
 
@@ -29,7 +31,7 @@ void Grid::add_particle(shared_ptr<Particle> particle) {
     particles[cell_id].append(particle);
 }
 
-void Grid::update_particles(float time_step, const Interaction& interaction) {
+void Grid::update_particles(float time_step) {
     // This function updates the particles' positions and physical states by iterating
     // over the grid. The grids are treated by groups of nine neighboring cells, which
     // allows to test collisions only with neighboring particles.
@@ -41,7 +43,8 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
     for (int i = 0; i < nb_threads; i++) threads_update_predicted_pos[i].get();
 
 
-
+    // To prevent interference between two threads calculating on the same cell, we first run on
+    // regions 0, 2, 4... and then, on regions 1, 3...
     std::vector<std::future<void>> threads_update_densities = std::vector<std::future<void>>(nb_threads);
     for (int i = 0; i < nb_threads; i += 2)
         threads_update_densities[i] = std::async(&Grid::update_densities, this,
@@ -56,16 +59,18 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
 
     std::vector<std::future<void>> threads_update_particles_pos_and_speed = std::vector<std::future<void>>(nb_threads);
     for (int i = 0; i < nb_threads; i += 2)
-        threads_update_particles_pos_and_speed[i] = std::async(&Grid::update_particles_pos_and_speed, this, time_step, interaction,
+        threads_update_particles_pos_and_speed[i] = std::async(&Grid::update_particles_pos_and_speed, this, time_step,
                                                  i * nb_cells.x() / nb_threads, (i + 1) * nb_cells.x() / nb_threads);
     for (int i = 0; i < nb_threads; i += 2) threads_update_particles_pos_and_speed[i].get();
 
     for (int i = 1; i < nb_threads; i += 2)
-        threads_update_particles_pos_and_speed[i] = std::async(&Grid::update_particles_pos_and_speed, this, time_step, interaction,
+        threads_update_particles_pos_and_speed[i] = std::async(&Grid::update_particles_pos_and_speed, this, time_step,
                                                  i * nb_cells.x() / nb_threads, (i + 1) * nb_cells.x() / nb_threads);
     for (int i = 1; i < nb_threads; i += 2) threads_update_particles_pos_and_speed[i].get();
 
 
+    // mutex here, because a particle that has a high speed won't necessarily move to a neighbor cell,
+    // so we cannot implement the same trick as previously.
     std::vector<std::thread> threads_update_particles_pos_on_grid = std::vector<std::thread>(nb_threads);
     for (int i = 0; i < nb_threads; i++)
         threads_update_particles_pos_on_grid[i] = std::thread(&Grid::update_particles_pos_on_grid, this,
@@ -74,7 +79,7 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
     for (int i = 0; i < nb_threads; i++) threads_update_particles_pos_on_grid[i].join();
 }
 
-void Grid::update_particles_pos_and_speed(float time_step, const Interaction& interaction, int start_cell_pos_x, int end_cell_pos_x) {
+void Grid::update_particles_pos_and_speed(float time_step, int start_cell_pos_x, int end_cell_pos_x) {
     // Updates the particles forces, position and speed, including the interaction force (when the user clicks on the particle system)
 
     const QVector2D gravity = QVector2D(0, -(*g));
@@ -86,7 +91,6 @@ void Grid::update_particles_pos_and_speed(float time_step, const Interaction& in
                 forces.append(gravity);
                 forces.append(calculate_pressure_force(particle) / particle->get_density());
                 forces.append(calculate_viscosity_force(particle));
-                forces.append(interaction_force(particle, interaction));
                 particle->update_forces(forces);
 
                 particle->update_pos_and_speed(time_step);
@@ -263,6 +267,7 @@ QVector2D Grid::calculate_viscosity_force(const shared_ptr<Particle>& particle) 
 }
 
 void Grid::change_grid(QPoint _nb_cells) {
+    // Changes the grid cells' size and number, and updates the particles
     nb_cells = _nb_cells;
     auto new_particles = QVector<QVector<shared_ptr<Particle>>>(nb_cells.x() * nb_cells.y());
 
@@ -304,19 +309,4 @@ float viscosity_smoothing_kernel(float influence_radius, float distance) {
     if (distance >= influence_radius) return 0;
     float value = influence_radius * influence_radius - distance * distance;
     return qPow(value, 3);
-}
-
-QVector2D interaction_force(shared_ptr<Particle> particle, Interaction interaction) {
-    QVector2D interac_force = {0, 0};
-
-    QVector2D offset = QVector2D((interaction.pos - particle->get_pos()));
-    float dst = offset.length();
-
-    if (dst < interaction.radius) {
-        QVector2D dirToInputPoint = offset.normalized();
-        float centerT = 1 - dst / interaction.radius;
-        interac_force += (dirToInputPoint * interaction.strength - particle->get_speed()) * centerT;
-    }
-
-    return interac_force;
 }

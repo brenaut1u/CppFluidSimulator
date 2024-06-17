@@ -40,7 +40,8 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
     for (int i = 0; i < nb_threads; i++) threads_update_predicted_pos[i].get();
 
 
-
+    // To prevent interference between two threads calculating on the same cell, we first run on
+    // regions 0, 2, 4... and then, on regions 1, 3...
     std::vector<std::future<void>> threads_update_densities = std::vector<std::future<void>>(nb_threads);
     for (int i = 0; i < nb_threads; i += 2)
         threads_update_densities[i] = std::async(&Grid::update_densities, this,
@@ -65,6 +66,8 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
     for (int i = 1; i < nb_threads; i += 2) threads_update_particles_pos_and_speed[i].get();
 
 
+    // mutex here, because a particle that has a high speed won't necessarily move to a neighbor cell,
+    // so we cannot implement the same trick as previously.
     std::vector<std::thread> threads_update_particles_pos_on_grid = std::vector<std::thread>(nb_threads);
     for (int i = 0; i < nb_threads; i++)
         threads_update_particles_pos_on_grid[i] = std::thread(&Grid::update_particles_pos_on_grid, this,
@@ -262,6 +265,7 @@ QVector2D Grid::calculate_viscosity_force(const shared_ptr<Particle>& particle) 
 }
 
 void Grid::change_grid(QPoint _nb_cells) {
+    // Changes the grid cells' size and number, and updates the particles
     nb_cells = _nb_cells;
     auto new_particles = QVector<QVector<shared_ptr<Particle>>>(nb_cells.x() * nb_cells.y());
 

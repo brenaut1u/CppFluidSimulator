@@ -9,14 +9,6 @@
 #include <utility>
 #include "grid.h"
 
-inline constexpr QColor color_scale[5] = { {0  , 0  , 255},
-                                           {0  , 200, 255},
-                                           {0  , 190, 0  },
-                                           {230, 230, 0  },
-                                           {255, 0  , 0  } };
-
-inline constexpr float max_speed = 4; // The speed coresponding to the top of the color scale, but particles' speed can be higher
-
 using std::shared_ptr;
 using std::pair;
 
@@ -24,6 +16,10 @@ class Grid;
 
 class Particle
 {
+    /**
+     * This class represents a single particle (a tiny piece of liquid).
+     */
+
 public:
     Particle(shared_ptr<float> _radius, shared_ptr<float> _influence_radius, QPointF _pos, QVector2D _speed, QColor _color, shared_ptr<Grid> _grid) :
             color(_color), radius(_radius), influence_radius(_influence_radius), pos(_pos), speed(_speed), grid(_grid) {id = particles_count++;}
