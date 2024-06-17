@@ -59,6 +59,13 @@ ParticleSystem::ParticleSystem(int _nb_particles, float _particle_radius, float 
 void ParticleSystem::update_view() {
     if (playing) {
         update_physics();
+        if (frame == end_frame) {
+            emit animation_done();
+            frame = 0;
+            playing = false;
+            recording = false;
+            video_writer->close();
+        }
     }
 }
 
@@ -77,14 +84,24 @@ void ParticleSystem::update_physics() {
 
 void ParticleSystem::start_preview() {
     reset_particles();
-    //end_frame = -1;
+    reset_colors_and_image();
+    end_frame = -1;
     frame = 0;
     playing = true;
+    video_writer = make_unique<QAviWriter>("demo.avi", im_size, 24, "MJPG");
+    video_writer->open();
 }
 
 void ParticleSystem::stop_preview() {
     playing = false;
     end_frame = frame;
+}
+
+void ParticleSystem::start_animation() {
+    reset_particles();
+    frame = 0;
+    playing = true;
+    recording = true;
 }
 
 void ParticleSystem::create_particles() {
@@ -159,13 +176,16 @@ void ParticleSystem::set_particles_colors_image() {
     for (auto particle : particles) {
         QPoint pos = world_to_screen(particle->get_pos());
 
-        if (image != nullptr && image_rec.contains(pos)) {
+        // could'nt use image_rec.contains(pos) because it includes the borders
+        if (image != nullptr
+            && pos.x() > image_rec.x() && pos.x() < image_rec.x() + image_rec.width()
+            && pos.y() > image_rec.y() && pos.y() < image_rec.y() + image_rec.height()) {
+
             QPoint pixel_pos = pos - image_rec.topLeft().toPoint();
             pixel_pos.setX(pixel_pos.x() * image->width() / image_rec.width());
             pixel_pos.setY(pixel_pos.y() * image->height() / image_rec.height());
 
             QColor c = image->pixelColor(pixel_pos);
-            //QColor c = QColor((particle->get_id() + 50) % 255, 0, 0);
             particle->set_color(c);
             colors[particle->get_id()] = c;
         }
@@ -177,7 +197,10 @@ void ParticleSystem::set_particles_colors_image() {
 }
 
 void ParticleSystem::paintEvent(QPaintEvent* e) {
-    QPainter p(this);
+    //QPainter p(this);
+
+    QPixmap pixmap(im_size);
+    QPainter p(&pixmap);
 
     // draw the background
     p.setBrush(QBrush(Qt::black));
@@ -198,6 +221,13 @@ void ParticleSystem::paintEvent(QPaintEvent* e) {
         p.setPen(Qt::NoPen);
         p.setBrush(QBrush(particle->get_color()));
         p.drawEllipse(world_to_screen(particle->get_pos()), particle_draw_radius, particle_draw_radius);
+    }
+
+    QImage im = pixmap.toImage();
+    QPainter(this).drawImage(QPoint(0, 0), im);
+
+    if (recording) {
+        video_writer->addFrame(im);
     }
 }
 

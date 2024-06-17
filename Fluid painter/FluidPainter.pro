@@ -17,6 +17,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     grid.cpp \
+    libqtavi/QAviWriter.cpp \
+    libqtavi/avi-utils.cpp \
+    libqtavi/fileio.cpp \
+    libqtavi/gwavi.cpp \
     main.cpp \
     mainwindow.cpp \
     particle.cpp \
@@ -25,6 +29,11 @@ SOURCES += \
 HEADERS += \
     grid.h \
     interaction.h \
+    libqtavi/QAviWriter.h \
+    libqtavi/avi-utils.h \
+    libqtavi/fileio.h \
+    libqtavi/gwavi.h \
+    libqtavi/gwavi_private.h \
     mainwindow.h \
     particle.h \
     particlesystem.h

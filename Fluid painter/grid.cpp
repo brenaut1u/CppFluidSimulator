@@ -8,7 +8,7 @@
 #include <QDebug>
 
 inline constexpr float epsilon = 0.0001;
-inline constexpr int nb_threads = 4;
+inline constexpr int nb_threads = 1;
 
 std::mutex mutex_update_particles_pos_on_grid;
 
@@ -66,16 +66,12 @@ void Grid::update_particles(float time_step, const Interaction& interaction) {
     for (int i = 1; i < nb_threads; i += 2) threads_update_particles_pos_and_speed[i].get();
 
 
-    //The simulation is no longer deterministic when we enable the mutex multithread below
+    std::vector<std::thread> threads_update_particles_pos_on_grid = std::vector<std::thread>(nb_threads);
+    for (int i = 0; i < nb_threads; i++)
+        threads_update_particles_pos_on_grid[i] = std::thread(&Grid::update_particles_pos_on_grid, this,
+                                                          i * particles.size() / nb_threads, (i + 1) * particles.size() / nb_threads);
 
-//    std::vector<std::thread> threads_update_particles_pos_on_grid = std::vector<std::thread>(nb_threads);
-//    for (int i = 0; i < nb_threads; i++)
-//        threads_update_particles_pos_on_grid[i] = std::thread(&Grid::update_particles_pos_on_grid, this,
-//                                                          i * particles.size() / nb_threads, (i + 1) * particles.size() / nb_threads);
-
-//    for (int i = 0; i < nb_threads; i++) threads_update_particles_pos_on_grid[i].join();
-
-    update_particles_pos_on_grid(0, particles.size());
+    for (int i = 0; i < nb_threads; i++) threads_update_particles_pos_on_grid[i].join();
 }
 
 void Grid::update_particles_pos_and_speed(float time_step, const Interaction& interaction, int start_cell_pos_x, int end_cell_pos_x) {

@@ -61,6 +61,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(ui->ButtonPreview, &QPushButton::clicked, this, &MainWindow::start_preview);
     QObject::connect(ui->ButtonStopPreview, &QPushButton::clicked, this, &MainWindow::stop_preview);
     QObject::connect(ui->ButtonOpenImage, &QPushButton::clicked, this, &MainWindow::set_image);
+    QObject::connect(ui->ButtonPlay, &QPushButton::clicked, this, &MainWindow::start_animation);
+
+    QObject::connect(particle_system, &ParticleSystem::animation_done, this, &MainWindow::animation_done);
 
     ui->labelNumberParticlesValue->setNum(init_nb_particles);
     ui->labelRadiusValue->setNum(init_particle_radius);
@@ -160,6 +163,40 @@ void MainWindow::stop_preview() {
     ui->ButtonPlay->setDisabled(false);
     particle_system->stop_preview();
     ui->labelNumberFrames->setText(QString("End frame: %1").arg(particle_system->get_end_frame()));
+}
+
+void MainWindow::start_animation() {
+    ui->NumberParticlesSlider->setDisabled(true);
+    ui->RadiusSlider->setDisabled(true);
+    ui->GravitySlider->setDisabled(true);
+    ui->PressureSlider->setDisabled(true);
+    ui->NearPressureSlider->setDisabled(true);
+    ui->ViscositySlider->setDisabled(true);
+    ui->InfluenceRadiusSlider->setDisabled(true);
+    ui->DensitySlider->setDisabled(true);
+    ui->CollisionDampinglSlider->setDisabled(true);
+    ui->ButtonPreview->setDisabled(true);
+    ui->ButtonStopPreview->setDisabled(true);
+    ui->ButtonOpenImage->setDisabled(true);
+    ui->ButtonPlay->setDisabled(true);
+
+    particle_system->start_animation();
+}
+
+void MainWindow::animation_done() {
+    ui->NumberParticlesSlider->setDisabled(false);
+    ui->RadiusSlider->setDisabled(false);
+    ui->GravitySlider->setDisabled(false);
+    ui->PressureSlider->setDisabled(false);
+    ui->NearPressureSlider->setDisabled(false);
+    ui->ViscositySlider->setDisabled(false);
+    ui->InfluenceRadiusSlider->setDisabled(false);
+    ui->DensitySlider->setDisabled(false);
+    ui->CollisionDampinglSlider->setDisabled(false);
+    ui->ButtonPreview->setDisabled(false);
+    ui->ButtonStopPreview->setDisabled(false);
+    ui->ButtonOpenImage->setDisabled(false);
+    ui->ButtonPlay->setDisabled(false);
 }
 
 void MainWindow::set_image() {

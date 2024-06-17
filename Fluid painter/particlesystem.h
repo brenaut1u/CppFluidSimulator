@@ -9,6 +9,7 @@
 #include <QRectF>
 #include <QString>
 #include <memory>
+#include "libqtavi/QAviWriter.h"
 #include "grid.h"
 #include "interaction.h"
 
@@ -37,6 +38,7 @@ public:
 
     void start_preview();
     void stop_preview();
+    void start_animation();
 
     void set_nb_particles(int _nb_particles) {nb_particles = _nb_particles;
                                              colors = QVector<QColor>(nb_particles, particle_default_color);}
@@ -59,6 +61,9 @@ public:
 
 public slots:
     void update_view();
+
+signals:
+    void animation_done();
 
 private:
     QPoint world_to_screen(QPointF world_pos) {
@@ -99,6 +104,8 @@ private:
     bool playing = false;
     int frame = 0;
     int end_frame = -1;
+    bool recording = false;
+    unique_ptr<QAviWriter> video_writer;
 
     QVector<QColor> colors;
     unique_ptr<QImage> image = nullptr;

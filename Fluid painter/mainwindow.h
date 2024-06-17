@@ -28,6 +28,8 @@ public slots:
     void set_collision_damping(int val);
     void start_preview();
     void stop_preview();
+    void start_animation();
+    void animation_done();
     void set_image();
 
 private:
