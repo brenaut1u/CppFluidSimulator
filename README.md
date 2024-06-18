@@ -9,7 +9,7 @@ The physical approach is entirely based on the first tutorial. Therefore, many p
 The project actually contains two sub-projects : an interactive fluid simulator, where the user can set the physical parameters and interact with the particles in real-time using the mouse by adding attractive and repulsive forces; and a "fluid painter", wich can create an animation using particles to make them create an image (the idea comes from Jean Tampon's tutorial).
 
 ## Building
-The project uses C++ 17 with Qt 5.14.2. It uses qmake for building.
+The project uses C++ 17 with Qt 5.14.2. It uses qmake for building, and MinGW.
 
 The build was tested from Qt Creator 4.11.1, on Windows 11.
 
@@ -56,6 +56,8 @@ How to use it:
 - The image rectangle will appear behind the particles. You can move the rectangle by clicking and draging (click on the corners and edges to resize it). The particles' color in front of the rectangle will change according to the image's pixels.
 - If, after all, the particles did not end up in a satisfying position, or you want to change the physical parameters, you can click again on the "Preview" button to recalculate the simulation. You will have to choose the image file again.
 - Once the image is correctly positioned, click the "Play" button to launch the animation. This will also generate a video file which will be located in the same directory as the executable.
+
+There is a demo video in the Fluid painter directory.
 
 The video generator uses Ion Vasilief's libqtavi library, realeased under the GNU GPL v. 3.0 licence. It is available here: https://www.iondev.ro/qtavi/
 
